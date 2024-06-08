@@ -1,0 +1,35 @@
+trigger:
+- none  # Manually trigger the pipeline
+
+pool:
+  vmImage: ubuntu-latest  # Adjust VM image if needed
+
+variables:
+  # Replace placeholders with your specific values
+  subscriptionId: 4aac66f6-3818-48f9-9777-b5888ddfe368
+  resourceGroupName: aks_tf_rg1
+  aksClusterName: my-aks-cluster-new
+
+stages:
+- stage: Deploy
+  displayName: Deploy to AKS
+  jobs:
+  - deployment: Deploy
+    displayName: Deploy to AKS cluster
+    environment: 'test'  # Replace with your environment name
+    strategy:
+      runOnce:
+        deploy:
+          manifests: 'deployment.yml'  # Path to your deployment manifest file in the repository
+          subscription: $(subscriptionId)
+          resourceGroup: $(resourceGroupName)
+          clusterName: $(aksClusterName)
+          namespace: default  # Adjust namespace if needed
+          kubectlPath: $(System.DefaultWorkingDirectory)/bin/kubectl  # Optional: Path to kubectl binary if not in PATH
+
+steps:
+- script: |  # Optional: Download kubectl if not pre-installed on agent
+    curl -LO "https://dl.k8s.io/release/v1.25.0/bin/linux/amd64/kubectl"
+    chmod +x kubectl
+    mv kubectl $(System.DefaultWorkingDirectory)/bin/  # Adjust directory if needed
+  displayName: Download kubectl (optional)
